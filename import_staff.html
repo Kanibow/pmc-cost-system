@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Staff Data to Firebase</title>
+    <!-- โหลดไลบรารี PapaParse สำหรับอ่านไฟล์ CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 p-10 font-sans">
+
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
+        <h1 class="text-2xl font-bold text-slate-800 mb-2">อัปโหลดฐานข้อมูลพนักงาน (อิงตามตารางล่าสุด)</h1>
+        <p class="text-slate-500 mb-4">เลือกไฟล์ .csv ที่เซฟมาจากตารางเพื่ออัปโหลดข้อมูลพนักงานเข้าสู่ระบบ</p>
+        
+        <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-6 text-sm text-indigo-800 leading-relaxed">
+            <strong>* ตรวจสอบหัวตาราง (แถวที่ 1) ก่อนเซฟเป็น CSV:</strong> ต้องสะกดตามนี้เป๊ะๆ (ตัวพิมพ์เล็ก-ใหญ่มีผล)<br>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">name</code>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">position</code>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">prefix</code>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">level</code>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">department</code>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">section</code>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">salary</code>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">ot1</code>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">ot15</code>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">ot2</code>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">ot3</code>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">allowance</code>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">accommodation</code>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">gas</code>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">phone</code>
+            <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-100">overhead</code>
+        </div>
+
+        <div class="border-2 border-dashed border-indigo-300 bg-indigo-50/50 p-6 rounded-xl text-center mb-6 transition hover:bg-indigo-50">
+            <input type="file" id="csvFile" accept=".csv" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer transition">
+        </div>
+
+        <button id="uploadBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-lg hover:shadow-indigo-500/30">
+            <i class="fa-solid fa-cloud-arrow-up mr-2"></i> เริ่มอัปโหลดเข้า Firebase
+        </button>
+
+        <!-- แถบแสดงสถานะ -->
+        <div id="status" class="mt-6 text-sm font-medium text-center text-slate-600 hidden">
+            กำลังอัปโหลด: <span id="progress" class="text-indigo-600 font-bold text-lg">0</span> รายการ...
+            <div id="currentUpload" class="text-xs text-indigo-400 mt-2 font-medium h-4"></div>
+        </div>
+    </div>
+
+    <!-- สคริปต์ทำงานกับ Firebase -->
+    <script type="module">
+        // 1. ตั้งค่า Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // !!! เปลี่ยนเป็น Config ของคุณ !!!
+        const firebaseConfig = {
+            apiKey: "AIzaSyARtJGeDjvQXmoXPQKUibm2v19xy4ygDs8",
+            authDomain: "pmc-app-bcad3.firebaseapp.com",
+            projectId: "pmc-app-bcad3",
+            storageBucket: "pmc-app-bcad3.firebasestorage.app",
+            messagingSenderId: "225546297713",
+            appId: "1:225546297713:web:6d8ed9ec06ba51d7b356d0",
+            measurementId: "G-1NS545NVKW"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Helper function สำหรับทำความสะอาดตัวเลข (กันเหนียวไว้เผื่อมีค่าแปลกปลอม)
+        function cleanNumber(val) {
+            if (!val) return 0;
+            const cleanedStr = String(val).replace(/,/g, '').trim();
+            const num = parseFloat(cleanedStr);
+            return isNaN(num) ? 0 : num;
+        }
+
+        // 2. ฟังก์ชันเมื่อกดปุ่มอัปโหลด
+        document.getElementById('uploadBtn').addEventListener('click', () => {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert("กรุณาเลือกไฟล์ .csv ก่อนครับ!");
+                return;
+            }
+
+            const btn = document.getElementById('uploadBtn');
+            const statusDiv = document.getElementById('status');
+            const progressSpan = document.getElementById('progress');
+            const currentUploadDiv = document.getElementById('currentUpload');
+            
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังอัปโหลด...`;
+            statusDiv.classList.remove('hidden');
+
+            // ใช้ PapaParse อ่านไฟล์ CSV
+            Papa.parse(file, {
+                header: true,          // ใช้แถวแรกเป็นชื่อตัวแปร (Key)
+                skipEmptyLines: true,  // ข้ามบรรทัดว่าง
+                complete: async function(results) {
+                    const data = results.data;
+                    let count = 0;
+
+                    try {
+                        // วนลูปอ่านพนักงานทีละคน
+                        for (let i = 0; i < data.length; i++) {
+                            const row = data[i];
+                            
+                            // ถ้าไม่มีชื่อ ให้ข้าม
+                            if (!row.name || row.name.trim() === "") continue;
+
+                            // 1. ดึงข้อมูลตัวเลข (อัปเดต ot15 ตามตารางใหม่)
+                            const salary = cleanNumber(row.salary);
+                            const ot1 = cleanNumber(row.ot1);
+                            const ot15 = cleanNumber(row.ot15); 
+                            const ot2 = cleanNumber(row.ot2);
+                            const ot3 = cleanNumber(row.ot3);
+                            const allow = cleanNumber(row.allowance);
+                            const accomm = cleanNumber(row.accommodation);
+                            const gas = cleanNumber(row.gas);
+                            const phone = cleanNumber(row.phone);
+                            const overhead = cleanNumber(row.overhead);
+
+                            // รวมค่า OT โดยนำเรทมาคูณชั่วโมงแต่ละประเภทตามสูตร: OT1*28 + OT1.5*22 + OT3*4
+                            const totalOT = (ot1 * 28) + (ot15 * 22) + (ot3 * 4); 
+
+                            // ใช้ชื่อพนักงานเป็น ID ของ Document ใน Firestore
+                            const docRef = doc(db, "staff_directory", row.name.trim());
+                            
+                            // 2. สั่งบันทึกลง Firebase (รองรับการดึง position และดักคำผิด postion)
+                            await setDoc(docRef, {
+                                name: row.name.trim(),
+                                position: row.position || row.postion || "ไม่ระบุ",
+                                prefix: row.prefix || "",
+                                level: parseInt(row.level) || 0,
+                                department: row.department || "",
+                                section: row.section || "", 
+                                
+                                totalSalary: salary,   
+                                ot: totalOT,           
+                                
+                                ot1: ot1,
+                                ot15: ot15, // แก้ตามหัวตารางใหม่แล้ว
+                                ot2: ot2,
+                                ot3: ot3,
+                                allowance: allow,      
+                                accommodation: accomm, 
+                                gas: gas,              
+                                phone: phone,          
+                                overhead: overhead     
+                            });
+
+                            count++;
+                            progressSpan.textContent = count + " / " + data.length;
+                            // แสดงชื่อและตำแหน่งที่กำลังอัปโหลดให้เห็นบนหน้าจอ
+                            currentUploadDiv.textContent = `กำลังบันทึก: ${row.name.trim()} (ตำแหน่ง: ${row.position || row.postion || 'ไม่ระบุ'})`;
+                        }
+                        
+                        alert(`อัปโหลดสำเร็จเรียบร้อย!\nข้อมูลพนักงานจำนวน ${count} คนถูกบันทึกลง Firebase Database แล้วครับ`);
+                    } catch (error) {
+                        console.error("Upload Error:", error);
+                        alert("เกิดข้อผิดพลาด: " + error.message);
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up mr-2"></i> เริ่มอัปโหลดเข้า Firebase`;
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

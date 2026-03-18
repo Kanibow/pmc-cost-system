@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <base target="_top">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manpower Plan Entry - Tabbed Interface</title>
+    
+    <!-- External Libraries (Tailwind, Chart.js, FontAwesome) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Libraries for Export Excel & PDF -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <!-- 1. ดึงไฟล์ CSS ที่แยกไว้เข้ามาทำงาน -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50">
+
+    <!-- Navigation Bar -->
+    <nav class="navbar bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white px-6 py-3 flex justify-between items-center shadow-lg sticky top-0 z-50">
+        <div class="font-bold text-xl flex items-center gap-3">
+            <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-2.5 rounded-xl shadow-md">
+                <i class="fa-solid fa-chart-pie text-white"></i>
+            </div>
+            <span class="tracking-wide">PMC <span class="text-blue-400 font-light">Manpower</span></span>
+        </div>
+        <div class="flex items-center gap-5">
+            <div class="hidden sm:flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-700">
+                <i class="fa-regular fa-circle-user text-blue-400 text-lg"></i>
+                <span class="text-sm text-slate-200">planner@pmc.com</span>
+            </div>
+            <button onclick="window.location.href='login.html'" class="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white border border-rose-500/30 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-power-off"></i> ออกจากระบบ
+            </button>
+        </div>
+    </nav>
+
+    <div id="app" class="max-w-7xl mx-auto p-4 md:p-8">
+        
+        <!-- Header Title & Save Button -->
+        <div class="mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-indigo-600 mb-2 flex items-center gap-3">
+                    <i class="fa-solid fa-users-gear text-blue-600"></i> ระบบจัดการแผนอัตรากำลัง
+                </h1>
+                <p class="text-slate-500 font-medium flex items-center gap-2">
+                    <i class="fa-solid fa-diagram-project"></i> Manpower Planning & Cost Estimation
+                </p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-semibold border border-blue-100 flex items-center gap-2">
+                    <i class="fa-regular fa-calendar-check"></i> ข้อมูลปีงบประมาณ 2026
+                </div>
+                <!-- ปุ่มบันทึกข้อมูล -->
+                <button onclick="saveProjectData()" id="btnSaveProject" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล
+                </button>
+            </div>
+        </div>
+
+        <!-- TABS NAVIGATION -->
+        <div class="bg-white rounded-t-2xl border-b border-slate-200 px-4 pt-4 flex space-x-2 overflow-x-auto shadow-sm">
+            <button onclick="switchTab('tab-input')" id="btn-tab-input" 
+                    class="tab-btn px-6 py-3.5 text-sm font-bold flex items-center gap-2 text-blue-700 border-b-4 border-blue-600 bg-blue-50/70 rounded-t-lg transition-colors">
+                <i class="fa-solid fa-pen-to-square text-lg"></i> 1. ข้อมูลโครงการและตาราง
+            </button>
+            <button onclick="switchTab('tab-summary')" id="btn-tab-summary" 
+                    class="tab-btn px-6 py-3.5 text-sm font-bold flex items-center gap-2 text-slate-500 border-b-4 border-transparent hover:text-slate-800 hover:bg-slate-50 rounded-t-lg transition-colors">
+                <i class="fa-solid fa-chart-simple text-lg"></i> 2. สรุปค่าใช้จ่ายและกราฟ
+            </button>
+            <button onclick="switchTab('tab-export')" id="btn-tab-export" 
+                    class="tab-btn px-6 py-3.5 text-sm font-bold flex items-center gap-2 text-slate-500 border-b-4 border-transparent hover:text-slate-800 hover:bg-slate-50 rounded-t-lg transition-colors">
+                <i class="fa-solid fa-file-export text-lg"></i> 3. บันทึกและส่งออกรายงาน
+            </button>
+        </div>
+
+        <div class="bg-white p-6 rounded-b-2xl shadow-sm border border-t-0 border-slate-200 min-h-[500px]">
+            
+            <!-- ========================================== -->
+            <!-- TAB 1: ข้อมูลโครงการและตาราง -->
+            <!-- ========================================== -->
+            <div id="tab-input" class="tab-content space-y-8">
+                <!-- Project Info Form -->
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-5">
+                        <i class="fa-solid fa-briefcase text-9xl"></i>
+                    </div>
+                    
+                    <h2 class="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info text-blue-500"></i> ข้อมูลพื้นฐานโครงการ
+                    </h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
+                        <div class="md:col-span-2 relative">
+                            <label class="block text-sm font-bold text-slate-700 mb-2">ชื่อโครงการ (Site Name)</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                    <i class="fa-solid fa-building text-slate-400"></i>
+                                </div>
+                                <input type="text" id="siteName" placeholder="ระบุชื่อโครงการ..."
+                                       class="w-full pl-10 p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white transition-all shadow-sm focus:shadow-md">
+                            </div>
+                        </div>
+                        <div class="md:col-span-2 relative">
+                            <label class="block text-sm font-bold text-slate-700 mb-2">ประเภทโครงการ (Project Type)</label>
+                            <div class="relative flex items-center gap-2">
+                                <div class="relative flex-grow">
+                                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                        <i class="fa-solid fa-layer-group text-slate-400"></i>
+                                    </div>
+                                    <select id="projectType" class="w-full pl-10 p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white transition-all shadow-sm focus:shadow-md appearance-none" onchange="handleProjectTypeChange()">
+                                        <option value="">-- เลือกประเภท --</option>
+                                        <option value="Solar">Solar Project</option>
+                                        <option value="Wind">Wind Project</option>
+                                        <option value="Combined">Combined Cycle Project</option>
+                                        <option value="Iwte">Industrial Waste to Energy Project</option>
+                                        <option value="Other">อื่น ๆ</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                                        <i class="fa-solid fa-chevron-down text-slate-400 text-sm"></i>
+                                    </div>
+                                </div>
+                                <!-- ปุ่มโหลด Preset -->
+                                <button onclick="applyPreset()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center gap-2 flex-shrink-0" title="เติมข้อมูลตามมาตรฐาน EGAT">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> โหลด Preset
+                                </button>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2 relative">
+                            <label class="block text-sm font-bold text-slate-700 mb-2">งาน (Task Type)</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                    <i class="fa-solid fa-list-check text-slate-400"></i>
+                                </div>
+                                <select id="taskType" class="w-full pl-10 p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white transition-all shadow-sm focus:shadow-md appearance-none">
+                                    <option value="">-- เลือก Task --</option>
+                                    <option value="(A) Administration">Administration</option>
+                                    <option value="(B) Engineering">Engineering</option>
+                                    <option value="(C) Construction">Construction & Commissioning</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                                    <i class="fa-solid fa-chevron-down text-slate-400 text-sm"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <label class="block text-sm font-bold text-slate-700 mb-2">เริ่ม (Start Month)</label>
+                            <div class="relative">
+                                <input type="month" id="startDate" class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white transition-all shadow-sm focus:shadow-md" onchange="generateTable()">
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <label class="block text-sm font-bold text-slate-700 mb-2">สิ้นสุด (End Month)</label>
+                            <div class="relative">
+                                <input type="month" id="endDate" class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none bg-white transition-all shadow-sm focus:shadow-md" onchange="generateTable()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="milestone-section" class="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100 hidden animate-[fadeIn_0.5s_ease-out]">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="fa-solid fa-flag text-indigo-500"></i>
+                        <h3 class="font-bold text-indigo-900 text-sm uppercase tracking-wide">Project Milestones Guideline</h3>
+                    </div>
+                    <div id="milestone-inputs-container" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        <!-- กล่อง Input ของแต่ละ Milestone -->
+                    </div>
+                </div>
+
+                <!-- Manpower Table Output -->
+                <div id="manpowerTableContainer" class="hidden animate-[fadeIn_0.5s_ease-out]">
+                    <div class="flex flex-col md:flex-row md:justify-between items-start md:items-center mb-4 gap-4">
+                        <h2 class="text-xl font-bold text-slate-800 flex items-center gap-3">
+                            <div class="bg-indigo-100 p-2 rounded-lg text-indigo-600"><i class="fa-solid fa-users"></i></div> 
+                            ตารางแผนอัตรากำลัง (Man-Month)
+                        </h2>
+                        <span class="text-sm bg-blue-100 text-blue-800 px-4 py-2 rounded-xl font-bold shadow-sm border border-blue-200 flex items-center gap-2" id="tab1-mm-total">
+                            <i class="fa-solid fa-calculator"></i> Total: 0.0 MM
+                        </span>
+                    </div>
+                    <div id="table-output" class="table-responsive rounded-xl border border-slate-200 shadow-sm">
+                        <!-- Table Output -->
+                    </div>
+                </div>
+
+                <!-- Layout แบบคู่ขนาน: Timeline (ซ้าย) + กราฟ (ขวา) (เฉพาะแท็บ 1) -->
+                <div class="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <!-- แกนเวลา (Vertical Timeline) -->
+                    <div class="lg:col-span-1 p-6 border border-slate-200 rounded-2xl bg-white shadow-sm flex flex-col max-h-[500px] overflow-y-auto">
+                        <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2 sticky top-0 bg-white z-10 pb-2 border-b border-slate-100">
+                            <i class="fa-solid fa-route text-indigo-500"></i> Key Milestones
+                        </h3>
+                        <div id="vertical-timeline-container" class="relative border-l-2 border-indigo-100 ml-3 pl-5 space-y-6 pb-4">
+                            <div class="text-sm text-slate-400 italic">ยังไม่มีการระบุ Milestone</div>
+                        </div>
+                    </div>
+
+                    <!-- กราฟ Bar Chart -->
+                    <div class="lg:col-span-3 p-5 border border-slate-200 rounded-2xl bg-white shadow-sm flex flex-col min-h-[400px]">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-blue-500"></i> กราฟกระจายอัตรากำลังรายเดือน พร้อม Milestone (Man-Month)
+                        </h3>
+                        <div class="flex-grow flex flex-col justify-center bg-slate-50 rounded-xl border border-slate-100 p-4 relative">
+                            <div id="chart-loading-message" class="text-center text-slate-400 py-10">
+                                <i class="fa-solid fa-chart-pie text-5xl mb-4 opacity-50"></i>
+                                <p class="text-sm font-medium mt-2">กรุณาสร้างตารางและระบุ Milestone เพื่อแสดงกราฟ</p>
+                            </div>
+                            <div class="chart-container" style="position: relative; height:350px; width:100%">
+                                <canvas id="manpowerChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ========================================== -->
+            <!-- TAB 2: สรุปอัตรากำลังและค่าใช้จ่าย (Summary & Chart) -->
+            <!-- ========================================== -->
+            <div id="tab-summary" class="tab-content hidden space-y-8">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- KPI Cards -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <!-- Cost Card -->
+                        <div class="relative bg-gradient-to-br from-emerald-500 to-teal-700 p-6 rounded-2xl shadow-lg shadow-emerald-500/30 text-white overflow-hidden group">
+                            <i class="fa-solid fa-sack-dollar absolute -right-4 -bottom-4 text-white opacity-10 text-8xl group-hover:scale-110 transition-transform duration-500"></i>
+                            <div class="relative z-10">
+                                <p class="text-emerald-100 text-sm font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+                                    <i class="fa-solid fa-coins text-emerald-300"></i> งบประมาณรวม (Estimated Cost)
+                                </p>
+                                <div id="expense-summary" class="text-4xl font-extrabold tracking-tight">฿ 0.00</div>
+                                <div class="mt-4 pt-4 border-t border-emerald-400/30 flex items-start gap-2 text-xs text-emerald-100">
+                                    <i class="fa-solid fa-circle-info mt-0.5"></i>
+                                    <span>ข้อมูลนี้ประเมินจากฐานข้อมูลเงินเดือนล่าสุด อาจมีการเปลี่ยนแปลงตามจริง</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Manpower Card -->
+                        <div class="relative bg-gradient-to-br from-blue-600 to-indigo-800 p-6 rounded-2xl shadow-lg shadow-blue-500/30 text-white overflow-hidden group">
+                            <i class="fa-solid fa-people-group absolute -right-2 -bottom-4 text-white opacity-10 text-8xl group-hover:scale-110 transition-transform duration-500"></i>
+                            <div class="relative z-10">
+                                <p class="text-blue-100 text-sm font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+                                    <i class="fa-solid fa-user-clock text-blue-300"></i> รวมอัตรากำลัง (Total Man-Month)
+                                </p>
+                                <div class="flex items-baseline gap-2">
+                                    <span id="total-mm-display" class="text-5xl font-extrabold tracking-tight">0.0</span>
+                                    <span class="text-lg font-medium text-blue-200">MM</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- กราฟ Cost Stacked Chart (ขยายเต็มพื้นที่ ไม่มี Timeline แล้ว) -->
+                    <div class="lg:col-span-2 p-5 border border-slate-200 rounded-2xl bg-white shadow-sm flex flex-col min-h-[350px]">
+                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-column text-emerald-500"></i> กราฟสรุปค่าใช้จ่ายแยกประเภท (Stacked Cost)
+                        </h3>
+                        <div class="flex-grow flex flex-col justify-center bg-slate-50 rounded-xl border border-slate-100 p-4">
+                            <div id="cost-chart-loading-message" class="text-center text-slate-400 py-10">
+                                <i class="fa-solid fa-coins text-5xl mb-4 opacity-50"></i>
+                                <p class="text-sm font-medium">กรุณากรอข้อมูลอัตรากำลังในแท็บที่ 1 ก่อน</p>
+                            </div>
+                            <div class="chart-container" style="position: relative; height:350px; width:100%">
+                                <canvas id="costChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ตารางคำนวณค่าใช้จ่าย (Cost Calculation Table) -->
+                <div class="p-6 border border-slate-200 rounded-2xl bg-white shadow-sm mt-4 animate-[fadeIn_0.5s_ease-out]">
+                    <div class="flex flex-col md:flex-row md:justify-between items-start md:items-center mb-4 gap-4">
+                        <h3 class="text-xl font-bold text-slate-800 flex items-center gap-3">
+                            <div class="bg-emerald-100 p-2 rounded-lg text-emerald-600"><i class="fa-solid fa-file-invoice-dollar"></i></div> 
+                            ตารางคำนวณค่าใช้จ่ายรายเดือน (Cost Plan)
+                        </h3>
+                        <div class="text-sm bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl font-bold border border-emerald-200">
+                            <i class="fa-solid fa-arrow-trend-up"></i> * คำนวณอัตโนมัติตามเงื่อนไขบริษัท
+                        </div>
+                    </div>
+                    
+                    <div id="cost-table-output" class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm mt-4 bg-slate-50 min-h-[150px]">
+                        <div class="text-center text-slate-400 py-10">
+                            <p class="text-sm font-medium">รอการกรอกข้อมูลอัตรากำลังเพื่อประมวลผลค่าใช้จ่าย...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Analysis Section (Gemini API) -->
+                <div class="p-6 border border-indigo-200 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 shadow-sm relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 opacity-5 pointer-events-none">
+                        <i class="fa-solid fa-microchip text-[12rem] text-indigo-900"></i>
+                    </div>
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-indigo-100 pb-4 relative z-10">
+                        <h3 class="text-xl font-bold text-indigo-900 flex items-center gap-3">
+                            <div class="bg-indigo-600 p-2 rounded-lg text-white shadow-md">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </div>
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Gemini AI Project Insights</span>
+                        </h3>
+                        <button onclick="analyzeWithGemini()" id="btnAiAnalyze" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2 hover:-translate-y-0.5">
+                            <i class="fa-solid fa-robot"></i> วิเคราะห์แผนด้วย AI
+                        </button>
+                    </div>
+                    
+                    <div id="aiResultContainer" class="hidden relative z-10">
+                        <div id="aiOutput" class="text-slate-700 text-sm leading-relaxed p-6 bg-white rounded-xl border border-indigo-100 shadow-sm">
+                            <!-- AI Output Goes Here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- TAB 3: บันทึกและส่งออกรายงาน (Save & Export) -->
+            <!-- ========================================== -->
+            <div id="tab-export" class="tab-content hidden">
+                <div class="max-w-4xl mx-auto text-center space-y-10 py-10">
+                    
+                    <div class="mb-12">
+                        <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-50 text-blue-600 rounded-2xl mb-6 shadow-sm border border-blue-100">
+                            <i class="fa-solid fa-server text-4xl"></i>
+                        </div>
+                        <h2 class="text-3xl font-extrabold text-slate-800">จัดการข้อมูลและส่งออก</h2>
+                        <p class="text-slate-500 mt-3 text-lg">บันทึกลงฐานข้อมูลหลัก หรือเลือกรูปแบบไฟล์ที่คุณต้องการส่งออกเพื่อนำไปใช้งานต่อ</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Action 1: Save to DB -->
+                        <button onclick="saveProjectData()" id="saveBtn" class="flex flex-col items-center justify-center p-8 bg-white border-2 border-blue-100 hover:border-blue-500 rounded-2xl hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300 group">
+                            <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                                <i class="fa-solid fa-cloud-arrow-up text-3xl"></i>
+                            </div>
+                            <span class="font-bold text-slate-800 text-lg">บันทึกลง Database</span>
+                            <span class="text-sm text-slate-500 mt-2">อัปเดตข้อมูลขึ้น Cloud</span>
+                        </button>
+
+                        <!-- Action 2: Export Excel -->
+                        <button onclick="exportToExcel()" class="flex flex-col items-center justify-center p-8 bg-white border-2 border-emerald-100 hover:border-emerald-500 rounded-2xl hover:shadow-xl hover:shadow-emerald-500/20 transition-all duration-300 group">
+                            <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                                <i class="fa-solid fa-file-excel text-3xl"></i>
+                            </div>
+                            <span class="font-bold text-slate-800 text-lg">ส่งออก Excel</span>
+                            <span class="text-sm text-slate-500 mt-2">ดาวน์โหลดไฟล์ .xlsx</span>
+                        </button>
+
+                        <!-- Action 3: Export PDF -->
+                        <button onclick="exportToPDF()" class="flex flex-col items-center justify-center p-8 bg-white border-2 border-rose-100 hover:border-rose-500 rounded-2xl hover:shadow-xl hover:shadow-rose-500/20 transition-all duration-300 group">
+                            <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-rose-500 group-hover:text-white transition-all">
+                                <i class="fa-solid fa-file-pdf text-3xl"></i>
+                            </div>
+                            <span class="font-bold text-slate-800 text-lg">ส่งออก PDF</span>
+                            <span class="text-sm text-slate-500 mt-2">พิมพ์รายงานสรุปผล</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Hidden input for total MM logic -->
+        <input type="hidden" id="grandTotalManMonthHidden" value="0.0">
+
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed top-5 right-5 z-50 transition-opacity duration-300 opacity-0 pointer-events-none">
+            <div id="toastContent" class="p-4 pr-6 rounded-xl shadow-2xl text-white font-medium flex items-center space-x-3">
+                <i id="toastIcon" class="fa-solid fa-circle-check text-xl"></i>
+                <span id="toastMessage"></span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 2. ดึงไฟล์ JavaScript ที่แยกไว้เข้ามาทำงาน -->
+    <script type="module" src="script.js"></script>
+
+</body>
+</html>

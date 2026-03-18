@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMC Sign In | Manpower Planning System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* 1. THE SETUP */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0f172a;
+            display: grid;
+            gap: 20px;
+            grid-template-columns: 1fr;
+            margin: 0;
+            min-height: 100vh;
+            padding: 0;
+            place-items: center;
+        }
+
+        .slide-container {
+            align-items: center;
+            background-color: #0f172a;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            height: 100vh;
+            min-height: 720px;
+            justify-content: center;
+            overflow: hidden;
+            padding: 0;
+            position: relative;
+            width: 100%;
+        }
+
+        /* Full Background Image Setup */
+        .full-bg-image {
+            background-position: center;
+            background-size: cover;
+            justify-content: center;
+            align-items: center;
+            display: flex;
+        }
+
+        /* Dark Overlay for better contrast */
+        .full-bg-image::before {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(15, 23, 42, 0.95) 100%);
+            content: '';
+            height: 100%;
+            left: 0;
+            position: absolute;
+            top: 0;
+            width: 100%;
+            z-index: 0;
+        }
+
+        /* --- FUNCTIONAL LOGIN UI CSS --- */
+        .login-wrapper {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Glassmorphism Card */
+        .login-card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            padding: 48px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        /* Logo Icon */
+        .login-logo {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 24px auto;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4);
+        }
+
+        .login-logo i {
+            color: #ffffff;
+            font-size: 28px;
+        }
+
+        .login-header h1 {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .login-header p {
+            color: #94a3b8;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        /* Form Elements */
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .form-group {
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            color: #e2e8f0;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: 0.02em;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        /* Left Icon */
+        .input-wrapper > i.fa-solid, 
+        .input-wrapper > i.fa-regular {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 16px;
+            z-index: 2;
+            pointer-events: none;
+            transition: color 0.2s ease;
+        }
+
+        /* Actual Input Fields */
+        .real-input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 14px 16px 14px 44px;
+            color: #ffffff;
+            font-size: 15px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .real-input::placeholder {
+            color: #475569;
+        }
+
+        .real-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            background: rgba(15, 23, 42, 0.7);
+        }
+
+        .real-input:focus + i {
+            color: #3b82f6;
+        }
+
+        /* Right Icon (Show Password) */
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 2;
+            transition: color 0.2s ease;
+            background: none;
+            border: none;
+            outline: none;
+        }
+
+        .toggle-password:hover {
+            color: #e2e8f0;
+        }
+
+        /* Options (Remember me & Forgot password) */
+        .login-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remember-container {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 8px;
+        }
+
+        .real-checkbox {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 4px;
+            background: rgba(15, 23, 42, 0.4);
+            cursor: pointer;
+            position: relative;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .real-checkbox:checked {
+            background: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .real-checkbox:checked::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            font-size: 10px;
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .remember-container span {
+            color: #cbd5e1;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .forgot-link {
+            color: #60a5fa;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .forgot-link:hover {
+            color: #93c5fd;
+            text-decoration: underline;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+            transition: transform 0.1s, box-shadow 0.2s;
+            margin-top: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .submit-btn:hover {
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Footer */
+        .login-footer {
+            margin-top: 32px;
+            text-align: center;
+            color: #64748b;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .login-footer i {
+            color: #10b981;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Main Login Container -->
+<div class="slide-container full-bg-image" style="background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop');">
+    
+    <div class="login-wrapper">
+        <div class="login-card">
+            
+            <div class="login-header">
+                <div class="login-logo">
+                    <i class="fa-solid fa-users-viewfinder"></i>
+                </div>
+                <h1>PMC Sign In</h1>
+                <p>Manpower Planning System</p>
+            </div>
+
+            <!-- Functional HTML Form -->
+            <form id="pmcLoginForm" class="login-form">
+                
+                <div class="form-group">
+                    <label for="email">Corporate Email</label>
+                    <div class="input-wrapper">
+                        <i class="fa-regular fa-envelope"></i>
+                        <input type="email" id="email" class="real-input" placeholder="name@pmc-company.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="password" class="real-input" placeholder="Enter your password" required>
+                        <button type="button" class="toggle-password" id="togglePasswordBtn">
+                            <i class="fa-regular fa-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="login-options">
+                    <label class="remember-container">
+                        <input type="checkbox" class="real-checkbox">
+                        <span>Remember device</span>
+                    </label>
+                    <a href="#" class="forgot-link">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="submit-btn" id="loginBtn">
+                    <span id="btnText">Secure Access</span>
+                    <div class="spinner" id="btnSpinner"></div>
+                </button>
+
+            </form>
+
+            <div class="login-footer">
+                <i class="fa-solid fa-shield-check"></i>
+                <span>Protected by Organization Cyber Security</span>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ระบบลอจิกทั้งหมด (รวม Firebase และหน้า UI) -->
+<script type="module">
+    // 1. นำเข้า Firebase SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+    // 2. ค่า firebaseConfig ของคุณ
+    const firebaseConfig = {
+        apiKey: "AIzaSyARtJGeDjvQXmoXPQKUibm2v19xy4ygDs8",
+        authDomain: "pmc-app-bcad3.firebaseapp.com",
+        projectId: "pmc-app-bcad3",
+        storageBucket: "pmc-app-bcad3.firebasestorage.app",
+        messagingSenderId: "225546297713",
+        appId: "1:225546297713:web:6d8ed9ec06ba51d7b356d0",
+        measurementId: "G-1NS545NVKW"
+    };
+
+    // 3. เริ่มต้นระบบ Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // --- โค้ดระบบ เปิด/ปิด ตาดูรหัสผ่าน (UI) ---
+    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+
+    togglePasswordBtn.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        
+        if(type === 'text') {
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+        } else {
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
+        }
+    });
+
+    // --- โค้ดระบบล็อกอินเชื่อมกับ Firebase ---
+    const loginForm = document.getElementById('pmcLoginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+
+    loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault(); 
+        
+        // ดึงค่าอีเมลและรหัสผ่านจากช่องกรอก
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        // UI Loading State (แสดงสถานะกำลังโหลด)
+        loginBtn.disabled = true;
+        btnText.textContent = "Authenticating...";
+        btnSpinner.style.display = "inline-block";
+
+        try {
+            // 4. ส่งข้อมูลไปตรวจสอบกับฐานข้อมูล Firebase Authentication
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            
+            console.log("Login Success! User:", user.email);
+            
+            // ล็อกอินสำเร็จ! เปลี่ยนหน้าไปที่ index.html
+            window.location.href = './index.html'; 
+            
+        } catch (error) {
+            // กรณีล็อกอินไม่สำเร็จ
+            console.error("Login Error:", error.message);
+            alert("เข้าสู่ระบบไม่สำเร็จ: กรุณาตรวจสอบอีเมลและรหัสผ่านให้ถูกต้อง");
+            
+            // คืนค่าปุ่มกลับเป็นเหมือนเดิม
+            loginBtn.disabled = false;
+            btnText.textContent = "Secure Access";
+            btnSpinner.style.display = "none";
+        }
+    });
+</script>
+
+</body>
+</html>
